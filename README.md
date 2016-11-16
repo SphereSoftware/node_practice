@@ -35,4 +35,21 @@ Let's test result:
 
 You should see something like `No test files found` in output.
 
+Let's install [supertest](https://github.com/visionmedia/supertest) library for requests testing:
 
+`npm install --save-dev supertest`
+
+And now we are ready to create our first test ( test/server.js ):
+
+```
+var supertest = require('supertest');
+var Server = require('../app/server');
+
+describe('Server', function() {
+  var request = supertest(new Server());
+
+  describe('GET /posts', function(don) {
+    request.post('/posts').expect(200, done);
+  });
+})
+```
