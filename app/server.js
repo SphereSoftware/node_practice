@@ -1,13 +1,13 @@
 const restify = require('restify');
-const server = restify.createServer();
-const PostsController = require('./controllers/posts.js');
 
-const posts = new PostsController();
+module.exports = (posts) => {
+  const server = restify.createServer();
 
-server.get('/posts', (req, res, next) =>
-  posts.index().then((result) =>
-    res.send(200, result)
-  )
-);
+  server.get('/posts', (req, res, next) =>
+    posts.index().then((result) =>
+      res.send(200, result)
+    )
+  );
 
-module.exports = server;
+  return server;
+};

@@ -168,3 +168,92 @@ server.get('/posts', (req, res, next) =>
 
 module.exports = server;
 ```
+Now we need some possiblity to test content that is returned from a PostsController.
+To do that we need to be able to define what content is returned by posts controller and test
+that it's serialized and returned from the server.
+
+To do that we can define our own test version of the posts controller and pass it to the server
+so it will be used ther.
+
+Let's modify our server first:
+
+```
+const restify = require('restify');
+
+module.exports = (posts) => {
+  const server = restify.createServer();
+
+  server.get('/posts', (req, res, next) =>
+    posts.index().then((result) =>
+      res.send(200, result)
+    )
+  );
+
+  return server;
+};
+```
+So now controlled is expected to be passed from outside rather that created inside.
+
+Now lets define test controller and pass it to the server in the server test:
+
+`test/server.js`:
+
+```
+const supertest = require('supertest');
+const server = require('../app/server');
+
+describe('server', () => {
+  const posts = {};
+  const request = supertest(server(posts));
+
+  describe('GET /posts', () => {
+    before(() => {
+      posts.index = () =>
+        new Promise((resolve, reject) =>
+          resolve({})
+        );
+    });
+
+    it('responds with OK', () =>
+      request
+        .get('/posts')
+        .expect(200)
+    );
+  });
+});
+```
+
+Run tests. Everything is green. Great!
+
+Also we need to modify our start script:
+
+`./start.js`:
+
+```
+const serverFactory = require('./app/server');
+const PostsController = require('./app/controllers/posts');
+
+const posts = new PostsController();
+const server = serverFactory(posts);
+
+server.listen(8080, () =>
+  console.log('%s listening at %s', server.name, server.url)
+);
+```
+
+Now let's run server and verify that nothing is broken:
+
+run server:
+
+```
+npm start
+```
+
+And 'curling' then:
+
+```
+curl -XGET http://localhost:8080/posts
+{}%
+```
+
+Everything looks fine. We are ready to start content testing!
