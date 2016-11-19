@@ -39,7 +39,9 @@ Let's install [supertest](https://github.com/visionmedia/supertest) library for 
 
 `npm install --save-dev supertest`
 
-And now we are ready to create our first test ( test/server.js ):
+And now we are ready to create our first test:
+
+`test/server.js`:
 
 ```
 describe('server', () => {
@@ -78,4 +80,59 @@ server.get('/posts', (req, res, next) =>
 module.exports = server;
 ```
 
+If everything is done properly then `npm test` would output:
+
+```
+server
+  GET /posts
+    ✓ responds with OK
+
+
+1 passing (32ms)
+```
+
 So now we have server that responds to `GET /posts` properly.
+
+Let's make some manual integration testing to be sure that server properly responds to real
+requests. For that first we need to create script that runs server and binds it to some port.
+
+`./start.js`:
+
+```
+const server = require('./app/server');
+
+server.listen(8080, () =>
+  console.log('%s listening at %s', server.name, server.url)
+);
+```
+
+and then update `package.json` to defined it as application start script:
+
+```
+...
+"script": {
+  "test": "node_modules/.bin/mocha",
+  "start": "node start.js"
+}
+...
+```
+
+and run server itself - `npm start`.
+
+As result we should see that server is running and ready to accept requests:
+
+```
+> node_api@1.0.0 start /projects/node_api
+> node start.js
+
+restify listening at http://[::]:8080
+```
+
+Let's make test request:
+
+```
+curl -XGET http://localhost:8080/posts
+{}%
+```
+
+So now we have an API server start is ready to respond to our requests.

@@ -4,7 +4,8 @@
   "description": "Create application directory:",
   "main": "index.js",
   "scripts": {
-    "test": "node_modules/.bin/mocha"
+    "test": "node_modules/.bin/mocha",
+    "start": "node start.js"
   },
   "author": "",
   "license": "ISC",
