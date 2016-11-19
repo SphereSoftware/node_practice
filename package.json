@@ -11,6 +11,7 @@
   "devDependencies": {
     "jshint": "^2.9.4",
     "mocha-jshint": "^2.3.1",
+    "restify": "^4.3.0",
     "supertest": "^2.0.1"
   }
 }

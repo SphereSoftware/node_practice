@@ -5,10 +5,10 @@ describe('server', () => {
   const request = supertest(server);
 
   describe('GET /posts', () =>
-    it('returns OK status', (done) =>
+    it('responds with OK', () =>
       request
-        .post('/posts')
+        .get('/posts')
         .expect(200)
     )
-  )
-})
+  );
+});

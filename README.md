@@ -42,14 +42,40 @@ Let's install [supertest](https://github.com/visionmedia/supertest) library for 
 And now we are ready to create our first test ( test/server.js ):
 
 ```
-var supertest = require('supertest');
-var Server = require('../app/server');
+describe('server', () => {
+  const request = supertest(server);
 
-describe('Server', function() {
-  var request = supertest(new Server());
-
-  describe('GET /posts', function(don) {
-    request.post('/posts').expect(200, done);
-  });
-})
+  describe('GET /posts', () =>
+    it('responds with OK', () =>
+      request
+        .get('/posts')
+        .expect(200)
+    )
+  );
+});
 ```
+
+Run the test and see expected error message:
+
+```Error: Cannot find module '../app/server'```
+
+Ok. So we don't have `server` defined yet. Let's do it. Let's define server.
+
+I will use [restify](http://restify.com/) package for building web api.
+
+`npm install --save-dev restify`
+
+And here our basic trivial server just to make test green:
+
+```
+const restify = require('restify');
+const server = restify.createServer();
+
+server.get('/posts', (req, res, next) =>
+  res.send({})
+);
+
+module.exports = server;
+```
+
+So now we have server that responds to `GET /posts` properly.
