@@ -136,3 +136,35 @@ curl -XGET http://localhost:8080/posts
 ```
 
 So now we have an API server start is ready to respond to our requests.
+
+Let's introduce now controller class:
+
+`app/controllers/posts.js`:
+
+```
+module.exports = class {
+  index() {
+    return new Promise((resolve, reject) =>
+      resolve({})
+    );
+  }
+};
+```
+
+That is simplest possible controller version. And modify our server to use that controller:
+
+```
+const restify = require('restify');
+const server = restify.createServer();
+const PostsController = require('./controllers/posts.js');
+
+const posts = new PostsController();
+
+server.get('/posts', (req, res, next) =>
+  posts.index().then((result) =>
+    res.send(200, result)
+  )
+);
+
+module.exports = server;
+```
