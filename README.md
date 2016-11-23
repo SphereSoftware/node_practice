@@ -264,6 +264,7 @@ First we need to update test so it became red:
 `test/server.js`:
 
 ```
+const _ = require('lodash');
 const supertest = require('supertest');
 const server = require('../app/server');
 
@@ -316,3 +317,87 @@ module.exports = (posts) => {
 ```
 
 And run `npm test` again. It's green again! Nice.
+
+Now let's add one more action - `POST /posts` that will create new post.
+
+Starting with test as usual:
+
+`test/server.js`:
+
+```
+describe('POST /posts', () => {
+  const data = [{ author: 'Mr. Rogers', content: 'Now POST /posts works' }];
+
+  before(() => {
+    posts.create = (attrs) =>
+      new Promise((resolve, reject) =>
+        resolve(_.merge({ id: 2 }, attrs))
+      );
+  });
+
+  it('responds with Created and returns content of the newly create post', () =>
+    request
+      .post('/posts')
+      .send({ post: data })
+      .expect(_.merge({ id: 2 }, data))
+      .expect(201)
+  );
+});
+```
+
+run `npm test` and see the error:
+
+```
+Error: expected { '0': { author: 'Mr. Rogers', content: 'Now POST /posts works' },
+  id: 2 } response body, got { code: 'MethodNotAllowedError',
+  message: 'POST is not allowed' }
+```
+
+Ok. that was expected. Let's define that action then:
+
+`app/server.js`:
+
+```
+server.post('/posts', (req, res, next) =>
+  posts.create(req.params.post).then((result) =>
+    res.send(201, result)
+  )
+);
+```
+
+Not run `npm test` again. Hm... Error again:
+
+```
+Error: expected { '0': { author: 'Mr. Rogers', content: 'Now POST /posts works' },
+  id: 2 } response body, got { id: 2 }
+```
+
+It looks like params that we sent were not parsed properly. Let's plug in body parser:
+
+`app/server.js`:
+
+```
+const restify = require('restify');
+
+module.exports = (posts) => {
+  const server = restify.createServer();
+
+  server.use(restify.bodyParser());
+
+  server.get('/posts', (req, res, next) =>
+    posts.index().then((result) =>
+      res.send(200, result)
+    )
+  );
+
+  server.post('/posts', (req, res, next) =>
+    posts.create(req.params.post).then((result) =>
+      res.send(201, result)
+    )
+  );
+
+  return server;
+};
+```
+
+And run `npm test` again. Not everything should be just fine.
