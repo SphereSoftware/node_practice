@@ -6,16 +6,19 @@ describe('server', () => {
   const request = supertest(server(posts));
 
   describe('GET /posts', () => {
+    const data = [{id: 1, author: 'Mr. Smith', content: 'Now GET /posts works'}];
+
     before(() => {
       posts.index = () =>
         new Promise((resolve, reject) =>
-          resolve({})
+          resolve(data)
         );
     });
 
     it('responds with OK', () =>
       request
         .get('/posts')
+        .expect(data)
         .expect(200)
     );
   });

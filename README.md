@@ -258,3 +258,61 @@ curl -XGET http://localhost:8080/posts
 ```
 
 Everything looks fine. We are ready to start content testing!
+
+First we need to update test so it became red:
+
+`test/server.js`:
+
+```
+const supertest = require('supertest');
+const server = require('../app/server');
+
+describe('server', () => {
+  const posts = {};
+  const request = supertest(server(posts));
+
+  describe('GET /posts', () => {
+    const data = [{id: 1, author: 'Mr. Smith', content: 'Now GET /posts works'}];
+
+    before(() => {
+      posts.index = () =>
+        new Promise((resolve, reject) =>
+          resolve(data)
+        );
+    });
+
+    it('responds with OK', () =>
+      request
+        .get('/posts')
+        .expect(data)
+        .expect(200)
+    );
+  });
+});
+```
+
+Run `npm test` and see an error:
+
+```
+Error: expected [ { id: 1, author: 'Mr. Smith', content: 'Now GET /posts works' } ] response body, got {}
+```
+
+So looks like server does not return posts data. Let's update server then:
+
+```
+const restify = require('restify');
+
+module.exports = (posts) => {
+  const server = restify.createServer();
+
+  server.get('/posts', (req, res, next) =>
+    posts.index().then((result) =>
+      res.send(200, result)
+    )
+  );
+
+  return server;
+};
+```
+
+And run `npm test` again. It's green again! Nice.
