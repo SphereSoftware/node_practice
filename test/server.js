@@ -42,4 +42,23 @@ describe('server', () => {
         .expect(201)
     );
   });
+
+  describe('GET /posts/:id', () => {
+    const data = [{ author: 'Mr. Williams', content: 'Now GET /posts/:id works' }];
+
+    before(() => {
+      posts.show = (id) =>
+        new Promise((resolve, reject) =>
+          resolve(_.merge({ id: id }, data))
+        );
+    });
+
+    it('responds with OK and returns content of the post', () =>
+      request
+        .get('/posts/3')
+        .send(data)
+        .expect(_.merge({ id: 3 }, data))
+        .expect(200)
+    );
+  });
 });

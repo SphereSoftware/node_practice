@@ -5,6 +5,12 @@ module.exports = (posts) => {
 
   server.use(restify.bodyParser());
 
+  server.get('/posts/:id', (req, res, next) =>
+    posts.show(req.params.id).then((result) =>
+      res.send(200, result)
+    )
+  );
+
   server.get('/posts', (req, res, next) =>
     posts.index().then((result) =>
       res.send(200, result)

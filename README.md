@@ -401,3 +401,51 @@ module.exports = (posts) => {
 ```
 
 And run `npm test` again. Not everything should be just fine.
+
+Now it's time to add one new action: 'GET /posts/:id'. This action is tricky. There always possible
+such situation whe post with the specified identifier does not exist. So there are two cases that
+must be tested - with existing post and non existing post
+
+Let's start from the first case - when post with the specified identifier exist. Tests first:
+
+```
+describe('GET /posts/:id', () => {
+  const data = [{ author: 'Mr. Williams', content: 'Now GET /posts/:id works' }];
+
+  before(() => {
+    posts.show = (id) =>
+      new Promise((resolve, reject) =>
+        resolve(_.merge({ id: id }, data))
+      );
+  });
+
+  it('responds with OK and returns content of the post', () =>
+    request
+      .get('/posts/3')
+      .send(data)
+      .expect(_.merge({ id: 3 }, data))
+      .expect(200)
+  );
+});
+```
+
+Run `npm test` and get an error:
+
+```
+Error: expected { '0': { author: 'Mr. Williams', content: 'Now GET /posts/:id works' },
+  id: 3 } response body, got { code: 'ResourceNotFound', message: '/posts/3 does not exist' }
+```
+
+So resource is not found. We need to define action on the server:
+
+```
+server.get('/posts/:id', (req, res, next) =>
+  posts.show(req.params.id).then((result) =>
+    res.send(200, result)
+  )
+);
+```
+
+Run test and now everything should be green!
+
+
