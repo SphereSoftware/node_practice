@@ -8,7 +8,7 @@ module.exports = (posts) => {
   server.get('/posts/:id', (req, res, next) =>
     posts.show(req.params.id).then((result) =>
       res.send(200, result)
-    )
+    ).catch(() => res.send(404))
   );
 
   server.get('/posts', (req, res, next) =>

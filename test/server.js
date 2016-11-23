@@ -60,5 +60,21 @@ describe('server', () => {
         .expect(_.merge({ id: 3 }, data))
         .expect(200)
     );
+
+    context('when there is no post with the specified id', () => {
+      before(() => {
+        posts.show = (id) =>
+          new Promise((resolve, reject) =>
+            reject(id)
+          );
+      });
+
+      it('responds with NotFound', () =>
+        request
+          .get('/posts/3')
+          .send(data)
+          .expect(404)
+      );
+    });
   });
 });

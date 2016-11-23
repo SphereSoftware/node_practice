@@ -448,4 +448,47 @@ server.get('/posts/:id', (req, res, next) =>
 
 Run test and now everything should be green!
 
+But what about the case where there is no post with the specified id? Server obviously should
+return NotFound (404) status in this case.
+
+Let's add test first:
+
+```
+context('when there is no post with the specified id', () => {
+  before(() => {
+    posts.show = (id) =>
+      new Promise((resolve, reject) =>
+        reject(id)
+      );
+  });
+
+  it('responds with NotFound', () =>
+    request
+      .get('/posts/3')
+      .send(data)
+      .expect(404)
+  );
+});
+```
+
+Run `npm test` and get an error:
+
+```
+Error: timeout of 2000ms exceeded. Ensure the done() callback is being called in this test.
+```
+
+That happened because promise int controller stub is rejected and that is not handled by the server.
+Let's do it:
+
+```
+server.get('/posts/:id', (req, res, next) =>
+  posts.show(req.params.id).then((result) =>
+    res.send(200, result)
+  ).catch(() => res.send(404))
+);
+```
+
+Run tests again. And now all of them should be green :)
+
+
 
