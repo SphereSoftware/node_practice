@@ -194,7 +194,8 @@ module.exports = (posts) => {
 ```
 So now controlled is expected to be passed from outside rather that created inside.
 
-Now lets define test controller and pass it to the server in the server test:
+Now let's pass stub object to the server in the test:
+
 
 `test/server.js`:
 
