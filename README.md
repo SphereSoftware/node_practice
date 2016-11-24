@@ -866,16 +866,15 @@ Ok. Update controller now:
 
 ```
 index() {
-  return this.client
-    .search({
-      index: this.indexName,
-      type: this.type
-    })
-    .then((res) =>
-      _.map(res.hits.hits, (hit) =>
-        _.merge(hit._source, { id: hit._id })
-      )
-    );
+  return this.client.search({
+    index: this.indexName,
+    type: this.type
+  })
+  .then((res) =>
+    _.map(res.hits.hits, (hit) =>
+      _.merge(hit._source, { id: hit._id })
+    )
+  );
 }
 ```
 
@@ -947,3 +946,65 @@ curl -XGET http://localhost:8080/posts                                          
 ```
 
 Works!
+
+Now let's implement indexing posta in ES.
+
+Test first:
+
+```
+describe('create', () => {
+  const attrs = { author: 'Mr. Rogers', text: "Now PostController create works!" };
+
+  before(() => {
+    client.index = () =>
+      new Promise((resolve, reject) =>
+        resolve({
+          "_index": 'index',
+          "_type": "type",
+          "_id": "AViXYdnZxmF-_Ui11JAF",
+          "_version": 1,
+          "created": true
+        })
+      );
+  });
+
+  it('parses and returns post data', () =>
+    posts.create(attrs).then((result) =>
+      result.should.deepEqual(_.merge({ id: "AViXYdnZxmF-_Ui11JAF" }, attrs))
+    )
+  );
+
+  it('specifies proper index, type and body', () => {
+    const spy = sinon.spy(client, 'index');
+
+    return posts.create(attrs).then(() => {
+      spy.should.be.calledOnce();
+      spy.should.be.calledWith({
+        index: 'index',
+        type: 'type',
+        body: attrs
+      });
+    });
+  });
+});
+```
+
+There are two tests are defined above. In real life those tests should be done in two iteractions.
+We joined both them into one iteraction here for simplicity.
+
+Run tests. See errors. Add indexing support to controller:
+
+```
+create(attrs) {
+  return this.client.index({
+    index: this.indexName,
+    type: this.type,
+    body: attrs
+  })
+  .then((res) =>
+    _.merge({ id: res._id }, attrs)
+  );
+}
+```
+
+Now everything should back to green :)

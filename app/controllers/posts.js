@@ -8,15 +8,25 @@ module.exports = class {
   }
 
   index() {
-    return this.client
-      .search({
-        index: this.indexName,
-        type: this.type
-      })
-      .then((res) =>
-        _.map(res.hits.hits, (hit) =>
-          _.merge(hit._source, { id: hit._id })
-        )
-      );
+    return this.client.search({
+      index: this.indexName,
+      type: this.type
+    })
+    .then((res) =>
+      _.map(res.hits.hits, (hit) =>
+        _.merge(hit._source, { id: hit._id })
+      )
+    );
+  }
+
+  create(attrs) {
+    return this.client.index({
+      index: this.indexName,
+      type: this.type,
+      body: attrs
+    })
+    .then((res) =>
+      _.merge({ id: res._id }, attrs)
+    );
   }
 };

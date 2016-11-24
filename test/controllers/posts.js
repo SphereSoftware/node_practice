@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const sinon = require('sinon');
 const should = require('should');
 require('should-sinon');
@@ -57,6 +58,42 @@ describe('PostsController', () => {
         spy.should.be.calledWith({
           index: 'index',
           type: 'type'
+        });
+      });
+    });
+  });
+
+  describe('create', () => {
+    const attrs = { author: 'Mr. Rogers', text: "Now PostController create works!" };
+
+    before(() => {
+      client.index = () =>
+        new Promise((resolve, reject) =>
+          resolve({
+            "_index": 'index',
+            "_type": "type",
+            "_id": "AViXYdnZxmF-_Ui11JAF",
+            "_version": 1,
+            "created": true
+          })
+        );
+    });
+
+    it('parses and returns post data', () =>
+      posts.create(attrs).then((result) =>
+        result.should.deepEqual(_.merge({ id: "AViXYdnZxmF-_Ui11JAF" }, attrs))
+      )
+    );
+
+    it('specifies proper index, type and body', () => {
+      const spy = sinon.spy(client, 'index');
+
+      return posts.create(attrs).then(() => {
+        spy.should.be.calledOnce();
+        spy.should.be.calledWith({
+          index: 'index',
+          type: 'type',
+          body: attrs
         });
       });
     });
