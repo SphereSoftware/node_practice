@@ -1024,7 +1024,7 @@ describe('show', () => {
 
   before(() =>
     client.get = () =>
-      new Promise(function(resolve, reject) {
+      new Promise((resolve, reject) =>
         resolve({
           "_index": 'index',
           "_type": 'post',
@@ -1032,8 +1032,8 @@ describe('show', () => {
           "_version": 1,
           "found": true,
           "_source": attrs
-        });
-      })
+        })
+      )
   );
 
   it('parses int returns post data', () =>
@@ -1075,3 +1075,58 @@ show(id) {
 ```
 
 Now tests are green :)
+
+Now let's take care of the non existing resource.
+
+First that case should be imitated in test:
+
+`test/controllers/posts.js`:
+
+```
+context('when there is no post with the specified id', () => {
+  before(() =>
+    client.get = () => {
+      return new Promise((resolve, reject) =>
+        resolve({
+          "_index": 'index',
+          "_type": 'post',
+          "_id": id,
+          "found": false
+        })
+      );
+    }
+  );
+
+  it('returns rejected promise with the non existing post id', () =>
+    posts.show(id).catch((result) =>
+      result.should.equal(id)
+    )
+  );
+});
+```
+
+Run tests. Get error. Update controller.
+
+`app/controllers/posts.js`:
+
+```
+show(id) {
+  return this.client.get({
+    index: this.indexName,
+    type: this.type,
+    id: id
+  })
+  .then((res) =>
+    new Promise((resolve, reject) => {
+      if (res.found) {
+        return resolve(_.merge({ id: res._id }, res._source));
+      }
+
+      reject(id);
+    })
+  );
+}
+```
+
+And now it's handled!
+

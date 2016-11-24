@@ -37,7 +37,13 @@ module.exports = class {
       id: id
     })
     .then((res) =>
-      _.merge({ id: res._id }, res._source)
+      new Promise((resolve, reject) => {
+        if (res.found) {
+          return resolve(_.merge({ id: res._id }, res._source));
+        }
+
+        reject(id);
+      })
     );
   }
 };

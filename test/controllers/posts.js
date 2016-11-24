@@ -105,7 +105,7 @@ describe('PostsController', () => {
 
     before(() =>
       client.get = () =>
-        new Promise(function(resolve, reject) {
+        new Promise((resolve, reject) =>
           resolve({
             "_index": 'index',
             "_type": 'post',
@@ -113,8 +113,8 @@ describe('PostsController', () => {
             "_version": 1,
             "found": true,
             "_source": attrs
-          });
-        })
+          })
+        )
     );
 
     it('parses int returns post data', () =>
@@ -134,6 +134,27 @@ describe('PostsController', () => {
           id: 1
         });
       });
+    });
+
+    context('when there is no post with the specified id', () => {
+      before(() =>
+        client.get = () => {
+          return new Promise((resolve, reject) =>
+            resolve({
+              "_index": 'index',
+              "_type": 'post',
+              "_id": id,
+              "found": false
+            })
+          );
+        }
+      );
+
+      it('returns rejected promise with the non existing post id', () =>
+        posts.show(id).catch((result) =>
+          result.should.equal(id)
+        )
+      );
     });
   });
 });
