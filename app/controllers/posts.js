@@ -29,4 +29,15 @@ module.exports = class {
       _.merge({ id: res._id }, attrs)
     );
   }
+
+  show(id) {
+    return this.client.get({
+      index: this.indexName,
+      type: this.type,
+      id: id
+    })
+    .then((res) =>
+      _.merge({ id: res._id }, res._source)
+    );
+  }
 };

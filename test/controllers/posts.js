@@ -98,4 +98,42 @@ describe('PostsController', () => {
       });
     });
   });
+
+  describe('show', () => {
+    const id = "AVhMJLOujQMgnw8euuFI";
+    const attrs = [{ author: 'Mr. Williams', content: 'Now PostsController show works!' }];
+
+    before(() =>
+      client.get = () =>
+        new Promise(function(resolve, reject) {
+          resolve({
+            "_index": 'index',
+            "_type": 'post',
+            "_id": id,
+            "_version": 1,
+            "found": true,
+            "_source": attrs
+          });
+        })
+    );
+
+    it('parses int returns post data', () =>
+      posts.show(id).then((result) =>
+        result.should.deepEqual(_.merge({ id: id }, attrs))
+      )
+    );
+
+    it('specifies proper index, type and id', () => {
+      const spy = sinon.spy(client, 'get');
+
+      return posts.show(1).then(() => {
+        spy.should.be.calledOnce();
+        spy.should.be.calledWith({
+          index: 'index',
+          type: 'type',
+          id: 1
+        });
+      });
+    });
+  });
 });

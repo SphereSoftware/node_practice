@@ -1008,3 +1008,70 @@ create(attrs) {
 ```
 
 Now everything should back to green :)
+
+Next action: `show`. You remember that it always possible that non existing resource requested.
+We need to handle it. But for now let's assume that such situation is impossible and implement
+simplified version of the method `show`.
+
+Test:
+
+`test/controllers/posts.js`:
+
+```
+describe('show', () => {
+  const id = "AVhMJLOujQMgnw8euuFI";
+  const attrs = [{ author: 'Mr. Williams', content: 'Now PostsController show works!' }];
+
+  before(() =>
+    client.get = () =>
+      new Promise(function(resolve, reject) {
+        resolve({
+          "_index": 'index',
+          "_type": 'post',
+          "_id": id,
+          "_version": 1,
+          "found": true,
+          "_source": attrs
+        });
+      })
+  );
+
+  it('parses int returns post data', () =>
+    posts.show(id).then((result) =>
+      result.should.deepEqual(_.merge({ id: id }, attrs))
+    )
+  );
+
+  it('specifies proper index, type and id', () => {
+    const spy = sinon.spy(client, 'get');
+
+    return posts.show(1).then(() => {
+      spy.should.be.calledOnce();
+      spy.should.be.calledWith({
+        index: 'index',
+        type: 'type',
+        id: 1
+      });
+    });
+  });
+});
+```
+
+Test are red now. Method `show` is even not defined on the `PostsController`. Let's defined it:
+
+`app/controllers/posts.js`:
+
+```
+show(id) {
+  return this.client.get({
+    index: this.indexName,
+    type: this.type,
+    id: id
+  })
+  .then((res) =>
+    _.merge({ id: res._id }, res._source)
+  );
+}
+```
+
+Now tests are green :)
