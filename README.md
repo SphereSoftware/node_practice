@@ -879,4 +879,71 @@ index() {
 }
 ```
 
-Now everything should be ok. Tests should b green if everything is done properly
+Now everything should be ok. Tests should b green if everything is done properly.
+
+Let's perform first full manual integration test to be sure that all parts of our puzzle fits
+properly.
+
+It's assumed here that you have ES service installed locally and running on default 9200 port.
+
+* Create index ( 'node_api' ):
+
+```
+curl -XPOST localhost:9200/node_api
+> {"acknowledged":true}%
+```
+
+* Create `post` example:
+
+```
+curl -XPOST localhost:9200/node_api/posts -d '{ "author": "Mr. Smith", "content": "Now GET /posts works!" }'
+> {"_index":"node_api","_type":"posts","_id":"AViW9F1lhQ3AxSLOwi2k","_version":1,"created":true}%
+```
+
+* Install [elasticsearch](https://www.npmjs.com/package/elasticsearch)
+
+```
+npm install elasticsearch --save-dev
+```
+
+* Create ES client instance:
+
+`./app/client.js`:
+
+```
+const elasticsearch = require('elasticsearch');
+
+module.exports = new elasticsearch.Client({
+  host: 'localhost:9200'
+});
+```
+
+* Specify index and type names in server instance that is created in the `start.js` script:
+
+`./start.js`:
+
+```
+const client = require('./app/client');
+const serverFactory = require('./app/server');
+const PostsController = require('./app/controllers/posts');
+
+const posts = new PostsController(client, 'node_api', 'posts');
+const server = serverFactory(posts);
+
+server.listen(8080, () =>
+  console.log('%s listening at %s', server.name, server.url)
+);
+```
+
+* Run our server:
+
+`npm start`
+
+* Make test request:
+
+```
+curl -XGET http://localhost:8080/posts                                                                                                                                                               1
+> [{"author":"Mr. Smith","content":"Now GET /posts works!","id":"AViW9F1lhQ3AxSLOwi2k"}]%
+```
+
+Works!
