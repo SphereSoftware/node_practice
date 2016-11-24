@@ -667,5 +667,38 @@ Everything is green now.
 
 We have workable server. Now we can start working on controller.
 
+So - PostsController. It will work with ES client. We can assume that ES client is well tested
+so we do not have to test it. Methods of the controller - those only is intended to be tested.
+Similiarly to server - let's pass client outside so we can inject test client there.
 
+First - let's update `PostsController` definition:
 
+```
+module.exports = class {
+  constructor(client) {
+    this.client = client;
+  }
+
+  index() {
+    return new Promise((resolve, reject) =>
+      resolve({})
+    );
+  }
+};
+```
+
+So now client might be defined outside, including test env.
+
+Now let's create test stub:
+
+```
+var PostsController = require('../../app/controllers/posts');
+
+describe('PostsController', function() {
+  var client = {};
+  var posts = new PostsController(client);
+});
+```
+
+Run tests. Everything still should be green. So we have everything prepared for `PostsController`
+development.
