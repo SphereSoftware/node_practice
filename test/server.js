@@ -96,7 +96,7 @@ describe('server', () => {
         .expect(200)
     );
 
-    context('when there is no post with the specified id', function() {
+    context('when there is no post with the specified id', () => {
       before(() => {
         posts.update = (id) =>
           new Promise((resolve, reject) =>
@@ -106,10 +106,25 @@ describe('server', () => {
 
       it('responds with NotFound', () =>
         request
-          .post('/posts/3')
+          .post('/posts/4')
           .send({ post: data })
           .expect(404)
       );
     });
+  });
+
+  describe('DELETE /posts/:id', () => {
+    before(() =>
+      posts.destroy = (id) =>
+        new Promise((resolve, reject) =>
+          resolve({ id: id })
+        )
+    );
+
+    it('responds with the id of the deleted post', () =>
+      request
+        .delete('/posts/5')
+        .expect({ id: 5 })
+    );
   });
 });

@@ -559,7 +559,7 @@ describe('POST /posts/:id', () => {
       .expect(200)
   );
 
-  context('when there is no post with the specified id', function() {
+  context('when there is no post with the specified id', () => {
     before(() => {
       posts.update = (id) =>
         new Promise((resolve, reject) =>
@@ -594,6 +594,39 @@ server.post('/posts/:id', (req, res, next) =>
 ```
 
 Run tests again. End we are green again!
+
+So - there is only one action left non implemented - `destroy`. Let's fill that blank.
+
+Update test first as usual:
+
+```
+describe('DELETE /posts/:id', () => {
+  before(() =>
+    posts.destroy = (id) =>
+      new Promise((resolve, reject) =>
+        resolve({ id: id })
+      )
+  );
+
+  it('responds with the id of the deleted post', () =>
+    request
+      .delete('/posts/5')
+      .expect({ id: 5 })
+  );
+});
+```
+
+Run it. Get error. Define action on server:
+
+```
+server.del('/posts/:id', (req, res, next) =>
+  posts.destroy(req.params.id).then((result) =>
+    res.send(200, { id: req.params.id })
+  )
+);
+```
+
+Run tests again. Green!
 
 
 
