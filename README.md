@@ -689,6 +689,12 @@ module.exports = class {
 
 So now client might be defined outside, including test env.
 
+Install `should`:
+
+```
+npm install should --save-dev
+```
+
 Now let's create test stub:
 
 ```
@@ -702,3 +708,81 @@ describe('PostsController', function() {
 
 Run tests. Everything still should be green. So we have everything prepared for `PostsController`
 development.
+
+Let's write our first test - index action.
+
+Test first:
+
+```
+describe('index', () => {
+  before(() =>
+    client.search = () =>
+      new Promise((resolve, reject) =>
+        resolve({
+          "took": 27,
+          "timed_out": false,
+          "_shards": {
+            "total": 5,
+            "successful": 5,
+            "failed": 0
+          },
+          "hits": {
+            "total": 1,
+            "max_score": 1,
+            "hits": [
+              {
+                "_index": indexName,
+                "_type": type,
+                "_id": "AVhMJLOujQMgnw8euuFI",
+                "_score": 1,
+                "_source": {
+                  "text": "Now PostController index works!",
+                  "author": "Mr.Smith"
+                }
+              }
+            ]
+          }
+        })
+      )
+  );
+
+  it('parses and returns post data', () =>
+    posts.index().then((result) =>
+      result.should.deepEqual([{
+        id: "AVhMJLOujQMgnw8euuFI",
+        author: "Mr.Smith",
+        text: "Now PostController index works!"
+      }])
+    )
+  );
+});
+```
+
+We see that possible ES response is imitated there. Run tests and see the failure: our current
+`PostsController` always returns empty object.
+
+Let's change it:
+
+```
+const _ = require('lodash');
+
+module.exports = class {
+  constructor(client, indexName, type) {
+    this.client = client;
+    this.indexName = indexName;
+    this.type = type;
+  }
+
+  index() {
+    return this.client
+      .search()
+      .then((res) =>
+        _.map(res.hits.hits, (hit) =>
+          _.merge(hit._source, { id: hit._id })
+        )
+      );
+  }
+};
+```
+
+Run test again. Green again!
