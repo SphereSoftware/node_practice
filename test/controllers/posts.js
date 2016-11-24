@@ -2,10 +2,8 @@ const should = require('should');
 const PostsController = require('../../app/controllers/posts');
 
 describe('PostsController', () => {
-  const indexName = 'node_api';
-  const type = 'posts';
   const client = {};
-  const posts = new PostsController(client);
+  const posts = new PostsController(client, 'index', 'type');
 
   describe('index', () => {
     before(() =>
@@ -24,8 +22,8 @@ describe('PostsController', () => {
               "max_score": 1,
               "hits": [
                 {
-                  "_index": indexName,
-                  "_type": type,
+                  "_index": 'index',
+                  "_type": 'type',
                   "_id": "AVhMJLOujQMgnw8euuFI",
                   "_score": 1,
                   "_source": {

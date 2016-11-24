@@ -731,8 +731,8 @@ describe('index', () => {
             "max_score": 1,
             "hits": [
               {
-                "_index": indexName,
-                "_type": type,
+                "_index": 'index',
+                "_type": 'type',
                 "_id": "AVhMJLOujQMgnw8euuFI",
                 "_score": 1,
                 "_source": {
@@ -767,10 +767,8 @@ Let's change it:
 const _ = require('lodash');
 
 module.exports = class {
-  constructor(client, indexName, type) {
+  constructor(client) {
     this.client = client;
-    this.indexName = indexName;
-    this.type = type;
   }
 
   index() {
@@ -786,3 +784,29 @@ module.exports = class {
 ```
 
 Run test again. Green again!
+
+We tested that `PostsController` parsed ES result properly. But we also need to test that it
+passes correct params to the client.
+
+There are two params that needs to be specified as parameters of the method `search` of the
+ES client: `index` and `type`. First let's add those params to `PostsController` constructor:
+
+```
+constructor(client, indexName, type) {
+  this.client = client;
+  this.indexName = indexName;
+  this.type = type;
+}
+```
+
+and now let's specifiy some test params in the `PostsController` specs:
+
+```
+describe('PostsController', () => {
+  const client = {};
+  const posts = new PostsController(client, 'index', 'type');
+  ...
+}
+```
+
+run test again. Green. Nothing is broken. Great.
