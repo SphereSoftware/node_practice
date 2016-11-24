@@ -126,5 +126,20 @@ describe('server', () => {
         .delete('/posts/5')
         .expect({ id: 5 })
     );
+
+    context('when there is no post with the specified id', () => {
+      before(() =>
+        posts.destroy = (id) =>
+          new Promise((resolve, reject) =>
+            reject(id)
+          )
+      );
+
+      it('responds with NotFound', () =>
+        request
+          .delete('/posts/5')
+          .expect(404)
+      );
+    });
   });
 });

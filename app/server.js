@@ -26,7 +26,7 @@ module.exports = (posts) => {
   server.del('/posts/:id', (req, res, next) =>
     posts.destroy(req.params.id).then((result) =>
       res.send(200, { id: req.params.id })
-    )
+    ).catch(() => res.send(404))
   );
 
   server.post('/posts', (req, res, next) =>

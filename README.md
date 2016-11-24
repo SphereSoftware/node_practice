@@ -628,6 +628,44 @@ server.del('/posts/:id', (req, res, next) =>
 
 Run tests again. Green!
 
+And now handle the case that there is no post with the specified id:
+
+Test first:
+
+`test/server.js`:
+
+```
+context('when there is no post with the specified id', () => {
+  before(() =>
+    posts.destroy = (id) =>
+      new Promise((resolve, reject) =>
+        reject(id)
+      )
+  );
+
+  it('responds with NotFound', () =>
+    request
+      .delete('/posts/5')
+      .expect(404)
+  );
+});
+```
+
+Run test. Get timeout error.  Update server:
+
+`app/server.js`:
+
+```
+server.del('/posts/:id', (req, res, next) =>
+  posts.destroy(req.params.id).then((result) =>
+    res.send(200, { id: req.params.id })
+  ).catch(() => res.send(404))
+);
+```
+
+Everything is green now.
+
+We have workable server. Now we can start working on controller.
 
 
 
