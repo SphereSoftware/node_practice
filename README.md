@@ -538,5 +538,63 @@ server.post('/posts/:id', (req, res, next) =>
 So now we have server update action that is capable to handle existing resource. But what about
 non existing resource?
 
+Let's handle it. Test first as usual:
+
+```
+describe('POST /posts/:id', () => {
+  const data = [{ author: 'Mr. Williams', content: 'Now POST /posts/:id works' }];
+
+  before(() => {
+    posts.update = (id, attrs) =>
+      new Promise((resolve, reject) =>
+        resolve(_.merge({ id: id }, attrs))
+      );
+  });
+
+  it('responds with Created and returns content of the updated post', () =>
+    request
+      .post('/posts/4')
+      .send({ post: data })
+      .expect(_.merge({ id: 4 }, data))
+      .expect(200)
+  );
+
+  context('when there is no post with the specified id', function() {
+    before(() => {
+      posts.update = (id) =>
+        new Promise((resolve, reject) =>
+          reject(id)
+        );
+    });
+
+    it('responds with NotFound', () =>
+      request
+        .post('/posts/3')
+        .send({ post: data })
+        .expect(404)
+    );
+  });
+});
+```
+
+Run tests and get an error:
+
+```
+Error: timeout of 2000ms exceeded. Ensure the done() callback is being called in this test.
+```
+
+Yeah. Than is reasonable. Let's add error handling to the server action:
+
+```
+server.post('/posts/:id', (req, res, next) =>
+  posts.update(req.params.id, req.params.post).then((result) =>
+    res.send(200, result)
+  ).catch(() => res.send(404))
+);
+```
+
+Run tests again. End we are green again!
+
+
 
 

@@ -14,7 +14,7 @@ module.exports = (posts) => {
   server.post('/posts/:id', (req, res, next) =>
     posts.update(req.params.id, req.params.post).then((result) =>
       res.send(200, result)
-    )
+    ).catch(() => res.send(404))
   );
 
   server.get('/posts', (req, res, next) =>

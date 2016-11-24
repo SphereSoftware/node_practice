@@ -79,7 +79,7 @@ describe('server', () => {
   });
 
   describe('POST /posts/:id', () => {
-    var data = [{ author: 'Mr. Williams', content: 'Now POST /posts/:id works' }];
+    const data = [{ author: 'Mr. Williams', content: 'Now POST /posts/:id works' }];
 
     before(() => {
       posts.update = (id, attrs) =>
@@ -95,5 +95,21 @@ describe('server', () => {
         .expect(_.merge({ id: 4 }, data))
         .expect(200)
     );
+
+    context('when there is no post with the specified id', function() {
+      before(() => {
+        posts.update = (id) =>
+          new Promise((resolve, reject) =>
+            reject(id)
+          );
+      });
+
+      it('responds with NotFound', () =>
+        request
+          .post('/posts/3')
+          .send({ post: data })
+          .expect(404)
+      );
+    });
   });
 });
