@@ -1,4 +1,6 @@
+const sinon = require('sinon');
 const should = require('should');
+require('should-sinon');
 const PostsController = require('../../app/controllers/posts');
 
 describe('PostsController', () => {
@@ -46,5 +48,17 @@ describe('PostsController', () => {
         }])
       )
     );
+
+    it('specifies proper index and type while searching', () => {
+      const spy = sinon.spy(client, 'search');
+
+      return posts.index().then(() => {
+        spy.should.be.calledOnce();
+        spy.should.be.calledWith({
+          index: 'index',
+          type: 'type'
+        });
+      });
+    });
   });
 });

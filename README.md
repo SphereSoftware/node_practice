@@ -810,3 +810,73 @@ describe('PostsController', () => {
 ```
 
 run test again. Green. Nothing is broken. Great.
+
+Now let's verify that we specified those params propely when called `client.search` method.
+
+I'm gonna use [sinon](http://sinonjs.org/) for that:
+
+```
+npm install sinon --save-dev
+```
+
+And `should` asserts for `sinon`:
+
+```
+npm install shold-sinon --save-dev
+```
+
+Require that in controller test:
+
+`test/controllers/posts.js`:
+
+```
+var sinon = require('sinon');
+require('should-sinon');
+```
+
+and add parameters verification test:
+
+`test/controllers/posts.js`:
+
+```
+it('specifies proper index and type while searching', () => {
+  const spy = sinon.spy(client, 'search');
+
+  return posts.index().then(() => {
+    spy.should.be.calledOnce();
+    spy.should.be.calledWith({
+      index: 'index',
+      type: 'type'
+    });
+  });
+});
+```
+
+Run `npm test`. See failure:
+
+```
+expected 'search' to be called with arguments { index: "index", type: "type" }
+    search() => [Promise] {  } at PostsController.index (/projects/node_api/app/controllers/posts.js:14:22)
+    expected false to be true
+```
+
+Ok. Update controller now:
+
+`app/controllers/posts.js`:
+
+```
+index() {
+  return this.client
+    .search({
+      index: this.indexName,
+      type: this.type
+    })
+    .then((res) =>
+      _.map(res.hits.hits, (hit) =>
+        _.merge(hit._source, { id: hit._id })
+      )
+    );
+}
+```
+
+Now everything should be ok. Tests should b green if everything is done properly
