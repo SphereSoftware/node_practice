@@ -11,6 +11,12 @@ module.exports = (posts) => {
     ).catch(() => res.send(404))
   );
 
+  server.post('/posts/:id', (req, res, next) =>
+    posts.update(req.params.id, req.params.post).then((result) =>
+      res.send(200, result)
+    )
+  );
+
   server.get('/posts', (req, res, next) =>
     posts.index().then((result) =>
       res.send(200, result)

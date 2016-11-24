@@ -77,4 +77,23 @@ describe('server', () => {
       );
     });
   });
+
+  describe('POST /posts/:id', () => {
+    var data = [{ author: 'Mr. Williams', content: 'Now POST /posts/:id works' }];
+
+    before(() => {
+      posts.update = (id, attrs) =>
+        new Promise((resolve, reject) =>
+          resolve(_.merge({ id: id }, attrs))
+        );
+    });
+
+    it('responds with Created and returns content of the updated post', () =>
+      request
+        .post('/posts/4')
+        .send({ post: data })
+        .expect(_.merge({ id: 4 }, data))
+        .expect(200)
+    );
+  });
 });

@@ -490,5 +490,53 @@ server.get('/posts/:id', (req, res, next) =>
 
 Run tests again. And now all of them should be green :)
 
+Ok. So let's start working on one more REST action - update.
+
+Test first:
+
+```
+describe('POST /posts/:id', () => {
+  var data = [{ author: 'Mr. Williams', content: 'Now POST /posts/:id works' }];
+
+  before(() => {
+    posts.update = (id, attrs) =>
+      new Promise((resolve, reject) =>
+        resolve(_.merge({ id: id }, attrs))
+      );
+  });
+
+  it('responds with Created and returns content of the updated post', () =>
+    request
+      .post('/posts/4')
+      .send({ post: data })
+      .expect(_.merge({ id: 4 }, data))
+      .expect(200)
+  );
+});
+```
+
+run it and see an expected error:
+
+```
+ Error: expected { '0': { author: 'Mr. Williams', content: 'Now POST /posts/:id works' },
+  id: 4 } response body, got { code: 'MethodNotAllowedError',
+  message: 'POST is not allowed' }
+```
+
+Ok. So let's define missing method:
+
+`app/server.js`:
+
+```
+server.post('/posts/:id', (req, res, next) =>
+  posts.update(req.params.id, req.params.post).then((result) =>
+    res.send(200, result)
+  )
+);
+```
+
+So now we have server update action that is capable to handle existing resource. But what about
+non existing resource?
+
 
 
