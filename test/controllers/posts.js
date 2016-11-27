@@ -117,7 +117,7 @@ describe('PostsController', () => {
         )
     );
 
-    it('parses int returns post data', () =>
+    it('parses and returns post data', () =>
       posts.show(id).then((result) =>
         result.should.deepEqual(_.merge({ id: id }, attrs))
       )
@@ -142,7 +142,7 @@ describe('PostsController', () => {
           return new Promise((resolve, reject) =>
             resolve({
               "_index": 'index',
-              "_type": 'post',
+              "_type": 'type',
               "_id": id,
               "found": false
             })
@@ -155,6 +155,43 @@ describe('PostsController', () => {
           result.should.equal(id)
         )
       );
+    });
+  });
+
+  describe('update', () => {
+    const id = "AVhMJLOujQMgnw8euuFI";
+    const attrs = [{ author: 'Mr. Williams', content: 'Now PostsController show works!' }];
+
+    before(() =>
+      client.update = () =>
+        new Promise((resolve, reject) =>
+          resolve({
+            "_index": "index",
+            "_type": "type",
+            "_id": id,
+            "_version": 4
+          })
+        )
+    );
+
+    it('parses and returns post data', () =>
+      posts.update(id, attrs).then((result) =>
+        result.should.deepEqual(_.merge({ id: id }, attrs))
+      )
+    );
+
+    it('specifies proper index, type, id and attrs', () => {
+      const spy = sinon.spy(client, 'update');
+
+      return posts.update(id, attrs).then(() => {
+        spy.should.be.calledOnce();
+        spy.should.be.calledWith({
+          index: 'index',
+          type: 'type',
+          id: id,
+          doc: attrs
+        });
+      });
     });
   });
 });

@@ -46,4 +46,16 @@ module.exports = class {
       })
     );
   }
+
+  update(id, attrs) {
+    return this.client.update({
+      index: this.indexName,
+      type: this.type,
+      id: id,
+      doc: attrs
+    })
+    .then((res) =>
+      _.merge({ id: res._id }, attrs)
+    );
+  }
 };

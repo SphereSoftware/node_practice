@@ -1130,3 +1130,78 @@ show(id) {
 
 And now it's handled!
 
+Ok. Next action is update. As usual we are going to start wiht happy path.
+
+Tests:
+
+```
+describe('update', () => {
+  const id = "AVhMJLOujQMgnw8euuFI";
+  const attrs = [{ author: 'Mr. Williams', content: 'Now PostsController show works!' }];
+
+  before(() =>
+    client.update = () =>
+      new Promise((resolve, reject) =>
+        resolve({
+          "_index": "index",
+          "_type": "type",
+          "_id": id,
+          "_version": 4
+        })
+      )
+  );
+
+  it('parses and returns post data', () =>
+    posts.update(id, attrs).then((result) =>
+      result.should.deepEqual(_.merge({ id: id }, attrs))
+    )
+  );
+
+  it('specifies proper index, type, id and attrs', () => {
+    const spy = sinon.spy(client, 'update');
+
+    return posts.update(id, attrs).then(() => {
+      spy.should.be.calledOnce();
+      spy.should.be.calledWith({
+        index: 'index',
+        type: 'type',
+        id: id,
+        doc: attrs
+      });
+    });
+  });
+});
+```
+
+Run `npm test` and get the error:
+
+```
+1) PostsController update parses and returns post data:
+   TypeError: posts.update is not a function
+    at Context.it (test/controllers/posts.js:178:13)
+
+2) PostsController update specifies proper index, type, id and attrs:
+   TypeError: posts.update is not a function
+    at Context.it (test/controllers/posts.js:186:20)
+```
+
+Let's define `update` method on controller then:
+
+`app/controllers/posts.js`:
+
+```
+update(id, attrs) {
+  return this.client.update({
+    index: this.indexName,
+    type: this.type,
+    id: id,
+    doc: attrs
+  })
+  .then((res) =>
+    _.merge({ id: res._id }, attrs)
+  );
+}
+```
+
+That should fix everything if everything is done properly.
+
