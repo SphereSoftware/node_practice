@@ -64,4 +64,13 @@ module.exports = class {
       })
     );
   }
+
+  destroy(id) {
+    return this.client.delete({
+      index: this.indexName,
+      type: this.type,
+      id: id
+    })
+    .then((res) => id);
+  }
 };

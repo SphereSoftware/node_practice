@@ -1254,3 +1254,71 @@ update(id, attrs) {
 
 So tests must be green again.
 
+Ok. Our last action: `destroy`. Happy path tests first:
+
+`test/controllers/posts.js`:
+
+```
+describe('destroy', () => {
+  const id = "AVhMJLOujQMgnw8euuFI";
+
+  before(() =>
+    client.delete = () =>
+      new Promise((resolve, reject) =>
+        resolve({
+          "found": true,
+          "_index": "index",
+          "_type": "type",
+          "_id": id,
+          "_version": 6
+        })
+      )
+  );
+
+  it('parses and returns post data', () =>
+    posts.destroy(id).then((result) =>
+      result.should.equal(id)
+    )
+  );
+
+  it('specifies proper index, type and id', () => {
+    const spy = sinon.spy(client, 'delete');
+
+    return posts.destroy(id).then(() => {
+      spy.should.be.calledOnce();
+      spy.should.be.calledWith({
+        index: 'index',
+        type: 'type',
+        id: id
+      });
+    });
+  });
+});
+```
+
+Run `npm test`. See the errors:
+
+```
+1) PostsController destroy parses and returns post data:
+   TypeError: posts.destroy is not a function
+    at Context.it (test/controllers/posts.js:234:13)
+
+2) PostsController destroy specifies proper index, type and id:
+   TypeError: posts.destroy is not a function
+    at Context.it (test/controllers/posts.js:242:20)
+```
+
+Ok. Let's define `destroy` action then:
+
+```
+destroy(id) {
+  return this.client.delete({
+    index: this.indexName,
+    type: this.type,
+    id: id
+  })
+  .then((res) => id);
+}
+```
+
+Green!!!

@@ -213,4 +213,40 @@ describe('PostsController', () => {
       );
     });
   });
+
+  describe('destroy', () => {
+    const id = "AVhMJLOujQMgnw8euuFI";
+
+    before(() =>
+      client.delete = () =>
+        new Promise((resolve, reject) =>
+          resolve({
+            "found": true,
+            "_index": "index",
+            "_type": "type",
+            "_id": id,
+            "_version": 6
+          })
+        )
+    );
+
+    it('parses and returns post data', () =>
+      posts.destroy(id).then((result) =>
+        result.should.equal(id)
+      )
+    );
+
+    it('specifies proper index, type and id', () => {
+      const spy = sinon.spy(client, 'delete');
+
+      return posts.destroy(id).then(() => {
+        spy.should.be.calledOnce();
+        spy.should.be.calledWith({
+          index: 'index',
+          type: 'type',
+          id: id
+        });
+      });
+    });
+  });
 });
