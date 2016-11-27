@@ -71,6 +71,14 @@ module.exports = class {
       type: this.type,
       id: id
     })
-    .then((res) => id);
+    .then((res) =>
+      new Promise((resolve, reject) => {
+        if (res.found) {
+          return resolve(id);
+        }
+
+        reject(id);
+      })
+    );
   }
 };

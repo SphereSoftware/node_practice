@@ -248,5 +248,26 @@ describe('PostsController', () => {
         });
       });
     });
+
+    context('when there is no post with the specified id', () => {
+      before(() =>
+        client.delete = () =>
+          new Promise((resolve, reject) =>
+            resolve({
+              "found": false,
+              "_index": "index",
+              "_type": "type",
+              "_id": id,
+              "_version": 6
+            })
+          )
+      );
+
+      it('returns rejected promise with the non existing post id', () =>
+        posts.destroy(id).catch((result) =>
+          result.should.equal(id)
+        )
+      );
+    });
   });
 });

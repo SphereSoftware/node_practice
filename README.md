@@ -1322,3 +1322,53 @@ destroy(id) {
 ```
 
 Green!!!
+
+Now let's handle non existing resource.
+
+Test:
+
+```
+context('when there is no post with the specified id', () => {
+  before(() =>
+    client.delete = () =>
+      new Promise((resolve, reject) =>
+        resolve({
+          "found": false,
+          "_index": "index",
+          "_type": "type",
+          "_id": id,
+          "_version": 6
+        })
+      )
+  );
+
+  it('returns rejected promise with the non existing post id', () =>
+    posts.destroy(id).catch((result) =>
+      result.should.equal(id)
+    )
+  );
+});
+```
+
+And functionality after:
+
+```
+destroy(id) {
+  return this.client.delete({
+    index: this.indexName,
+    type: this.type,
+    id: id
+  })
+  .then((res) =>
+    new Promise((resolve, reject) => {
+      if (res.found) {
+        return resolve(id);
+      }
+
+      reject(id);
+    })
+  );
+}
+```
+
+Green!!!!
