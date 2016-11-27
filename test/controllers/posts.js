@@ -193,5 +193,24 @@ describe('PostsController', () => {
         });
       });
     });
+
+    context('when there is no post with the specified id', () => {
+      before(() =>
+        client.update = () => {
+          return new Promise((resolve, reject) =>
+            resolve({
+              "error": "DocumentMissingException[[node_api][3] [posts][AVhMJLOujQMgnw8euuFI]: document missing]",
+              "status": 404
+            })
+          );
+        }
+      );
+
+      it('returns rejected promise with the non existing post id', () =>
+        posts.update(id, attrs).catch((result) =>
+          result.should.equal(id)
+        )
+      );
+    });
   });
 });

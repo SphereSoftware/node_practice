@@ -1205,3 +1205,52 @@ update(id, attrs) {
 
 That should fix everything if everything is done properly.
 
+Now it's time to take care situation whet identifier of non existing resource is specified.
+
+Test:
+
+```
+context('when there is no post with the specified id', () => {
+  before(() =>
+    client.update = () => {
+      return new Promise((resolve, reject) =>
+        resolve({
+          "error": "DocumentMissingException[[node_api][3] [posts][AVhMJLOujQMgnw8euuFI]: document missing]",
+          "status": 404
+        })
+      );
+    }
+  );
+
+  it('returns rejected promise with the non existing post id', () =>
+    posts.update(id, attrs).catch((result) =>
+      result.should.equal(id)
+    )
+  );
+});
+```
+
+And not let's add functionality:
+
+```
+update(id, attrs) {
+  return this.client.update({
+    index: this.indexName,
+    type: this.type,
+    id: id,
+    doc: attrs
+  })
+  .then((res) =>
+    new Promise((resolve, reject) => {
+      if (res._id) {
+        return resolve(_.merge({ id: res._id }, attrs));
+      }
+
+      reject(id);
+    })
+  );
+}
+```
+
+So tests must be green again.
+

@@ -55,7 +55,13 @@ module.exports = class {
       doc: attrs
     })
     .then((res) =>
-      _.merge({ id: res._id }, attrs)
+      new Promise((resolve, reject) => {
+        if (res._id) {
+          return resolve(_.merge({ id: res._id }, attrs));
+        }
+
+        reject(id);
+      })
     );
   }
 };
