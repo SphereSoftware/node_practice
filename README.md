@@ -1489,4 +1489,90 @@ module.exports = class {
 ```
 
 So we extracted all our interaction into special dedicated `Resource` class. But results parsing
-is still in the controller. Let's extract it into the special `Parses` class
+is still in the controller. Let's extract it into the special `Parser` class:
+
+`app/lib/parser.js`:
+
+```
+const _ = require('lodash');
+
+module.exports = class {
+  parseSearchResult(res) {
+    return _.map(res.hits.hits, (hit) =>
+      _.merge(hit._source, { id: hit._id })
+    );
+  }
+
+  parseCreateResult(attrs) {
+    return (res) => _.merge({ id: res._id }, attrs);
+  }
+
+  parseGetResult(res) {
+    return new Promise((resolve, reject) => {
+      if (res.found) {
+        return resolve(_.merge({ id: res._id }, res._source));
+      }
+
+      reject(res._id);
+    });
+  }
+
+  parseUpdateResult(id, attrs) {
+    return (res) =>
+      new Promise((resolve, reject) => {
+        if (res._id) {
+          return resolve(_.merge({ id: res._id }, attrs));
+        }
+
+        reject(id);
+      });
+  }
+
+  parseDeleteResult(id) {
+    return (res) =>
+      new Promise((resolve, reject) => {
+        if (res.found) {
+          return resolve(id);
+        }
+
+        reject(id);
+      });
+  }
+};
+```
+
+And our controller after:
+
+```
+const Resource = require('../lib/resource');
+const Parser = require('../lib/parser');
+
+module.exports = class {
+  constructor(client, indexName, type) {
+    this.resource = new Resource(client, indexName, type);
+    this.parser = new Parser();
+  }
+
+  index() {
+    return this.resource.search().then(this.parser.parseSearchResult);
+  }
+
+  create(attrs) {
+    return this.resource.create(attrs).then(this.parser.parseCreateResult(attrs));
+  }
+
+  show(id) {
+    return this.resource.get(id).then(this.parser.parseGetResult);
+  }
+
+  update(id, attrs) {
+    return this.resource.update(id, attrs).then(this.parser.parseUpdateResult(id, attrs));
+  }
+
+  destroy(id) {
+    return this.resource.delete(id).then(this.parser.parseDeleteResult(id));
+  }
+};
+```
+
+It looks much bettter now!
