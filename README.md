@@ -1372,3 +1372,121 @@ destroy(id) {
 ```
 
 Green!!!!
+
+Ok. So now we have all functionality we wanted. Let's clean up our code a little.
+
+Right now we have repetitive pattern in our `app/controllers/posts.js`:
+
+```
+{
+  index: this.indexName,
+  type: this.type
+  ...
+}
+```
+
+Let's try to DRY it and extract all such pattern to the dedicated class:
+
+`app/lib/resource.js`:
+
+```
+const _ = require('lodash');
+
+module.exports = class {
+  constructor(client, indexName, type) {
+    this.client = client;
+    this.baseParams = { index: indexName, type: type };
+  }
+
+  search() {
+    return this.client.search(this.baseParams);
+  }
+
+  create(attrs) {
+    return this.client.index(_.merge({ body: attrs }, this.baseParams));
+  }
+
+  get(id) {
+    return this.client.get(_.merge({ id: id }, this.baseParams));
+  }
+
+  update(id, attrs) {
+    return this.client.update(_.merge({ id: id, doc: attrs }, this.baseParams));
+  }
+
+  delete(id) {
+    return this.client.delete(_.merge({ id: id }, this.baseParams));
+  }
+};
+```
+
+That simplified our controller a bit:
+
+```
+const _ = require('lodash');
+const Resource = require('../lib/resource');
+
+module.exports = class {
+  constructor(client, indexName, type) {
+    this.resource = new Resource(client, indexName, type);
+  }
+
+  index() {
+    return this.resource.search()
+      .then((res) =>
+        _.map(res.hits.hits, (hit) =>
+          _.merge(hit._source, { id: hit._id })
+        )
+      );
+  }
+
+  create(attrs) {
+    return this.resource.create(attrs)
+      .then((res) =>
+        _.merge({ id: res._id }, attrs)
+      );
+  }
+
+  show(id) {
+    return this.resource.get(id)
+      .then((res) =>
+        new Promise((resolve, reject) => {
+          if (res.found) {
+            return resolve(_.merge({ id: res._id }, res._source));
+          }
+
+          reject(id);
+        })
+      );
+  }
+
+  update(id, attrs) {
+    return this.resource.update(id, attrs)
+      .then((res) =>
+        new Promise((resolve, reject) => {
+          if (res._id) {
+            return resolve(_.merge({ id: res._id }, attrs));
+          }
+
+          reject(id);
+        })
+      );
+  }
+
+  destroy(id) {
+    return this.resource.delete(id)
+      .then((res) =>
+        new Promise((resolve, reject) => {
+          if (res.found) {
+            return resolve(id);
+          }
+
+          reject(id);
+        })
+      );
+  }
+};
+```
+
+So we extracted all our interaction into special dedicated `Resource` class. But results parsing
+is still in the controller. Let's extract it into the special `Parses` class
